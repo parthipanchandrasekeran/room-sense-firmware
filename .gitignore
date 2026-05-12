@@ -11,6 +11,8 @@ rollback/
 *.bin
 flash_log.txt
 build_log.txt
+dump_log.txt
+boot_capture.txt
 
 # Throwaway scratch scripts
 _capture_boot.py
