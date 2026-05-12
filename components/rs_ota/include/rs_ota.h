@@ -29,6 +29,11 @@ extern "C" {
 /* Start the OTA polling task. Safe to call after Wi-Fi STA is connected. */
 void rs_ota_start(void);
 
+/* Wake the OTA poller out of its sleep early so it checks the manifest
+ * within the next ~2 seconds. Used by rs_control to expose a "deploy now"
+ * button on the dashboard. No-op if rs_ota_start() hasn't been called. */
+void rs_ota_trigger(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,0 +1,12 @@
+menu "Room Sense — Remote control"
+
+config RS_CONTROL_PORT
+    int "Remote control UDP port"
+    range 1024 65535
+    default 5052
+    help
+        UDP port the board listens on for remote commands (TRAIN_START,
+        OTA_NOW, REBOOT, etc.). The dashboard or a CLI tool sends ASCII
+        line-oriented datagrams to this port.
+
+endmenu

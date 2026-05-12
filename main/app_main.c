@@ -32,6 +32,7 @@
 #include "rs_wifi_neighbor.h"
 #include "rs_ble_scanner.h"
 #include "rs_ota.h"
+#include "rs_control.h"
 
 static const char *TAG = "wifi_sensing_demo";
 static esp_wifi_sensing_fsm_handle_t s_hms = NULL;
@@ -234,11 +235,23 @@ void app_main(void)
      * publish through it. BLE host is independent of WiFi and can start
      * before example_connect, but keeping it here keeps init logs grouped. */
     if (rs_telemetry_init() == 0) {
-        rs_telemetry_send("BOOT", "firmware=room-sense v0.3.0");
+        rs_telemetry_send("BOOT", "firmware=room-sense v0.3.1");
         rs_temp_start();
         rs_wifi_neighbor_start();
         rs_ble_scanner_start();
         rs_ota_start();
+
+        /* Expose the same peer-name → MAC map to rs_control so commands
+         * like "TRAIN_START AP" can resolve. Then spawn the listener. */
+        static rs_control_peer_t ctl_peers[3];
+        ctl_peers[0].name = "AP";
+        memcpy(ctl_peers[0].mac, s_mac_ap, 6);
+        ctl_peers[1].name = "MAC_1";
+        memcpy(ctl_peers[1].mac, CONFIG_CSI_SEND_MAC, 6);
+        ctl_peers[2].name = "MAC_2";
+        memcpy(ctl_peers[2].mac, CONFIG_CSI_SEND_MAC_2, 6);
+        rs_control_set_peers(ctl_peers, 3);
+        rs_control_start(s_hms);
     } else {
         ESP_LOGE(TAG, "rs_telemetry_init failed — auxiliary tasks not started");
     }

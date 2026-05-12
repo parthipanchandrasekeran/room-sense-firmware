@@ -27,6 +27,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_app_desc.h"
@@ -43,6 +44,11 @@
 #endif
 
 static const char *TAG = "rs_ota";
+
+/* Binary semaphore used by rs_ota_trigger() to wake the polling loop
+ * earlier than its configured interval. Counting semaphore with max=1
+ * gives us "at most one pending wake" semantics. */
+static SemaphoreHandle_t s_wake_sem = NULL;
 
 /* Naive JSON field extractor — pulls "<key>": "<value>" out of the manifest.
  * Good enough for the tiny manifest schema; if it grows we'll swap in cJSON. */
@@ -153,11 +159,25 @@ static void rs_ota_task(void *arg)
                 }
             }
         }
-        vTaskDelay(pdMS_TO_TICKS(CONFIG_RS_OTA_CHECK_INTERVAL_S * 1000));
+        /* Wait for either the periodic interval to elapse OR an explicit
+         * wake from rs_ota_trigger(). xSemaphoreTake returns pdTRUE on
+         * the trigger path, pdFALSE on timeout — we don't care which, the
+         * loop iterates either way. */
+        xSemaphoreTake(s_wake_sem, pdMS_TO_TICKS(CONFIG_RS_OTA_CHECK_INTERVAL_S * 1000));
     }
 }
 
 void rs_ota_start(void)
 {
+    if (s_wake_sem == NULL) {
+        s_wake_sem = xSemaphoreCreateBinary();
+    }
     xTaskCreate(rs_ota_task, "rs_ota", 8192, NULL, 1, NULL);
+}
+
+void rs_ota_trigger(void)
+{
+    if (s_wake_sem) {
+        xSemaphoreGive(s_wake_sem);
+    }
 }
