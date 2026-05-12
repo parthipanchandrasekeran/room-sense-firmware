@@ -128,5 +128,8 @@ static void rs_wifi_neighbor_task(void *arg)
 
 void rs_wifi_neighbor_start(void)
 {
-    xTaskCreate(rs_wifi_neighbor_task, "rs_wifi_nbr", 4096, NULL, 1, NULL);
+    /* 6 KB stack: the scan-result handling allocates a wifi_ap_record_t
+     * array (up to 32 entries × ~120 bytes) plus several string buffers.
+     * Bumped from 4096 for safety margin on top of IDF v5.5 changes. */
+    xTaskCreate(rs_wifi_neighbor_task, "rs_wifi_nbr", 6144, NULL, 1, NULL);
 }

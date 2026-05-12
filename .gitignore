@@ -5,6 +5,17 @@ dependencies.lock
 sdkconfig
 sdkconfig.old
 
+# Firmware flash dumps + logs — NEVER commit these.
+# They contain the NVS partition which stores WiFi credentials in plaintext.
+rollback/
+*.bin
+flash_log.txt
+build_log.txt
+
+# Throwaway scratch scripts
+_capture_boot.py
+_*.py
+
 # IDE
 .vscode/
 .idea/

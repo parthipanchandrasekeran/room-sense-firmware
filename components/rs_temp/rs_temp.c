@@ -56,7 +56,9 @@ static void rs_temp_task(void *arg)
 
 void rs_temp_start(void)
 {
-    xTaskCreate(rs_temp_task, "rs_temp", 3072, NULL, 1, NULL);
+    /* 6 KB stack: the IDF v5.5 temperature_sensor driver pulls in more
+     * stack than v4's. Saw stack overflow with 3072 — bumped to 6144. */
+    xTaskCreate(rs_temp_task, "rs_temp", 6144, NULL, 1, NULL);
 }
 
 #else  /* !RS_TEMP_HAS_SENSOR */
