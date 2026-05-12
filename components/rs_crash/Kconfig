@@ -1,0 +1,11 @@
+menu "Room Sense — Crash uploader"
+
+config RS_CRASH_UPLOAD_URL_PREFIX
+    string "Coredump upload URL prefix"
+    default "http://10.0.0.70:5050/api/coredump"
+    help
+        The board appends '/<board_mac>' to this prefix and PUTs the raw
+        coredump bytes. Must match the backend's /api/coredump/<mac>
+        endpoint.
+
+endmenu

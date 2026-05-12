@@ -12,9 +12,10 @@
 # headroom before needing to expand the slot size.
 #
 # Name,    Type, SubType, Offset,   Size
-nvs,       data, nvs,     ,         0x6000
-otadata,   data, ota,     ,         0x2000
-phy_init,  data, phy,     ,         0x1000
-ota_0,     app,  ota_0,   0x20000,  0x200000
-ota_1,     app,  ota_1,   ,         0x200000
-storage,   data, spiffs,  ,         0x100000
+nvs,       data, nvs,      ,         0x6000
+otadata,   data, ota,      ,         0x2000
+phy_init,  data, phy,      ,         0x1000
+ota_0,     app,  ota_0,    0x20000,  0x200000
+ota_1,     app,  ota_1,    ,         0x200000
+coredump,  data, coredump, ,         0x20000
+storage,   data, spiffs,   ,         0xe0000

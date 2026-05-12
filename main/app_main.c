@@ -33,6 +33,8 @@
 #include "rs_ble_scanner.h"
 #include "rs_ota.h"
 #include "rs_control.h"
+#include "rs_presence.h"
+#include "rs_crash.h"
 
 static const char *TAG = "wifi_sensing_demo";
 static esp_wifi_sensing_fsm_handle_t s_hms = NULL;
@@ -235,14 +237,21 @@ void app_main(void)
      * publish through it. BLE host is independent of WiFi and can start
      * before example_connect, but keeping it here keeps init logs grouped. */
     if (rs_telemetry_init() == 0) {
-        rs_telemetry_send("BOOT", "firmware=room-sense v0.3.1");
+        rs_telemetry_send("BOOT", "firmware=room-sense v0.4.0");
+
+        /* If we crashed on the previous boot, upload the coredump now.
+         * This is best-effort and asynchronous — the rest of the system
+         * keeps booting whether or not the upload succeeds. */
+        rs_crash_upload_if_present();
+
         rs_temp_start();
         rs_wifi_neighbor_start();
         rs_ble_scanner_start();
         rs_ota_start();
 
-        /* Expose the same peer-name → MAC map to rs_control so commands
-         * like "TRAIN_START AP" can resolve. Then spawn the listener. */
+        /* Shared peer-name → MAC table for rs_control AND rs_presence so
+         * commands like "TRAIN_START AP" and PRESENCE diagnostics agree
+         * on channel naming. */
         static rs_control_peer_t ctl_peers[3];
         ctl_peers[0].name = "AP";
         memcpy(ctl_peers[0].mac, s_mac_ap, 6);
@@ -252,6 +261,15 @@ void app_main(void)
         memcpy(ctl_peers[2].mac, CONFIG_CSI_SEND_MAC_2, 6);
         rs_control_set_peers(ctl_peers, 3);
         rs_control_start(s_hms);
+
+        /* rs_presence has a structurally identical peer table — share. */
+        static rs_presence_peer_t pres_peers[3];
+        for (int i = 0; i < 3; i++) {
+            pres_peers[i].name = ctl_peers[i].name;
+            memcpy(pres_peers[i].mac, ctl_peers[i].mac, 6);
+        }
+        rs_presence_set_peers(pres_peers, 3);
+        rs_presence_start(s_hms);
     } else {
         ESP_LOGE(TAG, "rs_telemetry_init failed — auxiliary tasks not started");
     }
