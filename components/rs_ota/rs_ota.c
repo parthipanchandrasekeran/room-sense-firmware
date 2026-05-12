@@ -126,7 +126,12 @@ static void rs_ota_task(void *arg)
     rs_telemetry_send("OTA", "running=%s", running->version);
 
     while (1) {
-        char body[512];
+        /* 4 KB manifest buffer. Was 512 in v0.4.0 — when the manifest
+         * grew past that (notes field plus URL plus a few keys) the fetch
+         * failed silently and OTA stalled for an hour. 4 KB is generous
+         * for a JSON manifest while still bounded against runaway server
+         * responses. */
+        char body[4096];
         if (fetch_manifest(body, sizeof(body)) == ESP_OK) {
             char remote_version[32] = {0};
             char remote_url[256] = {0};
