@@ -2,7 +2,11 @@ set(reqs esp_wifi_sensing
          protocol_examples_common
          driver
          esp_driver_ledc
-         led_strip)
+         led_strip
+         rs_telemetry
+         rs_temp
+         rs_wifi_neighbor
+         rs_ble_scanner)
 
 idf_component_register(SRCS "app_main.c"
                             "led_control.c"

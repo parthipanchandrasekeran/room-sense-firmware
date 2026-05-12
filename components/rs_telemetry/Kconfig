@@ -1,0 +1,16 @@
+menu "Room Sense — Telemetry"
+
+config RS_TELEMETRY_HOST_IP
+    string "Backend host IP"
+    default "10.0.0.70"
+    help
+        IPv4 address of the Room Sense backend that receives UDP packets.
+
+config RS_TELEMETRY_HOST_PORT
+    int "Backend UDP port"
+    range 1 65535
+    default 5051
+    help
+        UDP port the backend listens on. Must match csi_udp_receiver.py.
+
+endmenu

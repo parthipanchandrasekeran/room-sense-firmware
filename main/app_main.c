@@ -26,6 +26,12 @@
 #include "led_control.h"
 #include "web_serial_monitor.h"
 
+/* Room Sense additions */
+#include "rs_telemetry.h"
+#include "rs_temp.h"
+#include "rs_wifi_neighbor.h"
+#include "rs_ble_scanner.h"
+
 static const char *TAG = "wifi_sensing_demo";
 static esp_wifi_sensing_fsm_handle_t s_hms = NULL;
 static uint8_t s_mac_ap[6] = {0};
@@ -138,12 +144,20 @@ static void on_motion_event(esp_wifi_sensing_fsm_handle_t handle,
         }
         ESP_LOGI(TAG, "[%s] ACTIVE peer=" MACSTR " data=%" PRIu32,
                  name, MAC2STR(peer_mac), data);
+        /* Room Sense: only publish state for the AP channel — that's the
+         * one tied to the actual room. Peer channels are reference signals. */
+        if (is_ap_channel) {
+            rs_telemetry_send("STATE", "active %" PRIu32, data);
+        }
     } else if (event == ESP_WIFI_SENSING_FSM_EVENT_INACTIVE) {
         if (is_ap_channel) {
             led_notify_ap_inactive();
         }
         ESP_LOGI(TAG, "[%s] INACTIVE peer=" MACSTR,
                  name, MAC2STR(peer_mac));
+        if (is_ap_channel) {
+            rs_telemetry_send("STATE", "inactive 0");
+        }
     }
 }
 
@@ -213,6 +227,19 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
     espnow_rx_init();
     demo_init();
+
+    /* Room Sense: start telemetry + auxiliary sensor tasks now that WiFi
+     * is associated. Order matters: telemetry first so other tasks can
+     * publish through it. BLE host is independent of WiFi and can start
+     * before example_connect, but keeping it here keeps init logs grouped. */
+    if (rs_telemetry_init() == 0) {
+        rs_telemetry_send("BOOT", "firmware=room-sense v0.2.0");
+        rs_temp_start();
+        rs_wifi_neighbor_start();
+        rs_ble_scanner_start();
+    } else {
+        ESP_LOGE(TAG, "rs_telemetry_init failed — auxiliary tasks not started");
+    }
 
 #if CONFIG_ESP_WIFI_SENSING_WEB_SERIAL_ENABLE
     /* Web UI also maps esp-radar train (TRAIN_START/STOP/REMOVE) and streams wander / train thresholds. */
