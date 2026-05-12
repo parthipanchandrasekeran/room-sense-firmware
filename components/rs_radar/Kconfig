@@ -1,0 +1,29 @@
+menu "Room Sense — Radar (LD2410C)"
+
+config RS_RADAR_UART_NUM
+    int "UART port number"
+    range 0 2
+    default 1
+    help
+        Which UART peripheral to use. UART0 is the console; pick 1 or 2.
+
+config RS_RADAR_RX_GPIO
+    int "ESP RX pin (radar's TX connects here)"
+    default 18
+    help
+        GPIO that receives bytes FROM the radar.
+
+config RS_RADAR_TX_GPIO
+    int "ESP TX pin (connects to radar's RX)"
+    default 17
+    help
+        GPIO that sends bytes TO the radar.
+
+config RS_RADAR_BAUD
+    int "UART baud rate"
+    default 256000
+    help
+        LD2410C ships with 256000 baud by default. Reconfigure via the
+        radar's command interface to change.
+
+endmenu

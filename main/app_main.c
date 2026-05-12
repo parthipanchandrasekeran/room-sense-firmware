@@ -35,6 +35,7 @@
 #include "rs_control.h"
 #include "rs_presence.h"
 #include "rs_crash.h"
+#include "rs_radar.h"
 
 static const char *TAG = "wifi_sensing_demo";
 static esp_wifi_sensing_fsm_handle_t s_hms = NULL;
@@ -237,7 +238,7 @@ void app_main(void)
      * publish through it. BLE host is independent of WiFi and can start
      * before example_connect, but keeping it here keeps init logs grouped. */
     if (rs_telemetry_init() == 0) {
-        rs_telemetry_send("BOOT", "firmware=room-sense v0.4.1");
+        rs_telemetry_send("BOOT", "firmware=room-sense v0.5.0");
 
         /* If we crashed on the previous boot, upload the coredump now.
          * Wrapped in a guard for v0.4.1 because we don't yet have proof
@@ -251,6 +252,12 @@ void app_main(void)
         rs_wifi_neighbor_start();
         rs_ble_scanner_start();
         rs_ota_start();
+
+        /* Optional radar (HLK-LD2410C) on UART1 / GPIO 17,18. The task
+         * starts unconditionally — if no radar is wired up, uart_read
+         * just times out forever and emits no telemetry. Safe to enable
+         * even on boards without the hardware. */
+        rs_radar_start();
 
         /* Shared peer-name → MAC table for rs_control AND rs_presence so
          * commands like "TRAIN_START AP" and PRESENCE diagnostics agree

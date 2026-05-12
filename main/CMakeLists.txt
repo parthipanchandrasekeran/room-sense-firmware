@@ -10,7 +10,8 @@ set(reqs esp_wifi_sensing
          rs_ota
          rs_control
          rs_presence
-         rs_crash)
+         rs_crash
+         rs_radar)
 
 idf_component_register(SRCS "app_main.c"
                             "led_control.c"
