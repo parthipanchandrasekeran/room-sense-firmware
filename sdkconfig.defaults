@@ -20,6 +20,13 @@ CONFIG_ESP32_WIFI_CSI_ENABLED=y
 CONFIG_ESP_WIFI_SENSING_DEFAULT_PRESENCE_SENSITIVITY=250
 
 # Room Sense additions
+
+# Allow plain HTTP for OTA downloads. We serve firmware from the home-LAN
+# dashboard (10.0.0.70:5050) without TLS — setting up a cert just for an
+# internal sensor mesh is overkill. Without this flag, esp_https_ota
+# refuses any URL with scheme=http and returns ESP_ERR_INVALID_ARG (0x102).
+CONFIG_ESP_HTTPS_OTA_ALLOW_HTTP=y
+
 # Enable coredump to flash partition so rs_crash can upload on next boot
 CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y
 CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF=y
