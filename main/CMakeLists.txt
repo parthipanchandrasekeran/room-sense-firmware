@@ -6,7 +6,8 @@ set(reqs esp_wifi_sensing
          rs_telemetry
          rs_temp
          rs_wifi_neighbor
-         rs_ble_scanner)
+         rs_ble_scanner
+         rs_ota)
 
 idf_component_register(SRCS "app_main.c"
                             "led_control.c"

@@ -31,6 +31,7 @@
 #include "rs_temp.h"
 #include "rs_wifi_neighbor.h"
 #include "rs_ble_scanner.h"
+#include "rs_ota.h"
 
 static const char *TAG = "wifi_sensing_demo";
 static esp_wifi_sensing_fsm_handle_t s_hms = NULL;
@@ -233,10 +234,11 @@ void app_main(void)
      * publish through it. BLE host is independent of WiFi and can start
      * before example_connect, but keeping it here keeps init logs grouped. */
     if (rs_telemetry_init() == 0) {
-        rs_telemetry_send("BOOT", "firmware=room-sense v0.2.0");
+        rs_telemetry_send("BOOT", "firmware=room-sense v0.3.0");
         rs_temp_start();
         rs_wifi_neighbor_start();
         rs_ble_scanner_start();
+        rs_ota_start();
     } else {
         ESP_LOGE(TAG, "rs_telemetry_init failed — auxiliary tasks not started");
     }

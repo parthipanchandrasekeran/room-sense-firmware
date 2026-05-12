@@ -1,0 +1,20 @@
+# Room Sense — dual-OTA partition table for ESP32-S3 with 8 MB flash.
+#
+# Layout (offsets auto-placed):
+#   nvs      : key/value store (Wi-Fi creds, FSM thresholds)
+#   otadata  : tracks which OTA slot is current
+#   phy_init : RF calibration data
+#   ota_0    : firmware slot A (boots here on first flash)
+#   ota_1    : firmware slot B (target of next OTA)
+#   storage  : SPIFFS for diagnostics / future use
+#
+# Each app slot is 2 MB. Current binary is ~1 MB so we have plenty of
+# headroom before needing to expand the slot size.
+#
+# Name,    Type, SubType, Offset,   Size
+nvs,       data, nvs,     ,         0x6000
+otadata,   data, ota,     ,         0x2000
+phy_init,  data, phy,     ,         0x1000
+ota_0,     app,  ota_0,   0x20000,  0x200000
+ota_1,     app,  ota_1,   ,         0x200000
+storage,   data, spiffs,  ,         0x100000

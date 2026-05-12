@@ -1,0 +1,17 @@
+menu "Room Sense — OTA updater"
+
+config RS_OTA_MANIFEST_URL
+    string "Firmware manifest URL"
+    default "http://10.0.0.70:5050/firmware/manifest.json"
+    help
+        URL the OTA task polls for new firmware. Must serve a small JSON
+        object with at least "version" and "url" fields.
+
+config RS_OTA_CHECK_INTERVAL_S
+    int "Check interval (seconds)"
+    range 60 86400
+    default 3600
+    help
+        How often to poll the manifest URL. Default: 1 hour.
+
+endmenu
