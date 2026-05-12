@@ -238,7 +238,7 @@ void app_main(void)
      * publish through it. BLE host is independent of WiFi and can start
      * before example_connect, but keeping it here keeps init logs grouped. */
     if (rs_telemetry_init() == 0) {
-        rs_telemetry_send("BOOT", "firmware=room-sense v0.5.0");
+        rs_telemetry_send("BOOT", "firmware=room-sense v0.4.1");
 
         /* If we crashed on the previous boot, upload the coredump now.
          * Wrapped in a guard for v0.4.1 because we don't yet have proof
@@ -253,11 +253,12 @@ void app_main(void)
         rs_ble_scanner_start();
         rs_ota_start();
 
-        /* Optional radar (HLK-LD2410C) on UART1 / GPIO 17,18. The task
-         * starts unconditionally — if no radar is wired up, uart_read
-         * just times out forever and emits no telemetry. Safe to enable
-         * even on boards without the hardware. */
-        rs_radar_start();
+        /* rs_radar PARKED in v0.4.2 — the radar hardware bring-up didn't
+         * complete (bare-hole ESP32 + unreliable wire contact). Compiled
+         * in but not started, so boards without the hardware aren't
+         * affected. Will re-enable in v0.5.x once a pre-soldered ESP32
+         * + breadboard arrive. */
+        /* rs_radar_start(); */
 
         /* Shared peer-name → MAC table for rs_control AND rs_presence so
          * commands like "TRAIN_START AP" and PRESENCE diagnostics agree
@@ -272,13 +273,13 @@ void app_main(void)
         rs_control_set_peers(ctl_peers, 3);
         rs_control_start(s_hms);
 
-        /* rs_presence is DISABLED in v0.4.1 — initial deployment in v0.4.0
-         * caused a boot loop on Bedroom 2 (probably accessing FSM channel
-         * diagnostics from a separate task races with the FSM's own
-         * processing). We keep the component compiled in for future use
-         * but stop calling it on boot. The PRESENCE / WANDER telemetry
-         * streams are unavailable until this is fixed and a v0.4.2 ships. */
-        (void) ctl_peers;  /* peers shared with rs_control; no rs_presence wire-up */
+        /* rs_presence STILL DISABLED post-v0.4.2 attempt. We tried to
+         * re-enable it but Living Room boot-looped again. So the original
+         * suspicion (rs_presence accessing FSM diag from a separate task
+         * races with FSM's own thread) was correct. Will need a different
+         * approach: either piggy-back on the FSM's event callback or use
+         * a lower polling rate. Skipped for now. */
+        (void) ctl_peers;
     } else {
         ESP_LOGE(TAG, "rs_telemetry_init failed — auxiliary tasks not started");
     }
