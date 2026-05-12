@@ -177,7 +177,12 @@ void rs_ota_start(void)
     if (s_wake_sem == NULL) {
         s_wake_sem = xSemaphoreCreateBinary();
     }
-    xTaskCreate(rs_ota_task, "rs_ota", 8192, NULL, 1, NULL);
+    /* 16 KB stack: the manifest buffer alone takes 4 KB (bumped from 512
+     * to handle larger manifests). esp_http_client + esp_https_ota add a
+     * few more KB of working set. 8192 overflows; 16384 leaves comfortable
+     * headroom. Caught by ESP-IDF's stack overflow detector during v0.4.0
+     * boot loop on Bedroom 2. */
+    xTaskCreate(rs_ota_task, "rs_ota", 16384, NULL, 1, NULL);
 }
 
 void rs_ota_trigger(void)

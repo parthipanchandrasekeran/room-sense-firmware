@@ -237,12 +237,15 @@ void app_main(void)
      * publish through it. BLE host is independent of WiFi and can start
      * before example_connect, but keeping it here keeps init logs grouped. */
     if (rs_telemetry_init() == 0) {
-        rs_telemetry_send("BOOT", "firmware=room-sense v0.4.0");
+        rs_telemetry_send("BOOT", "firmware=room-sense v0.4.1");
 
         /* If we crashed on the previous boot, upload the coredump now.
-         * This is best-effort and asynchronous — the rest of the system
-         * keeps booting whether or not the upload succeeds. */
+         * Wrapped in a guard for v0.4.1 because we don't yet have proof
+         * rs_crash is safe in all flash states. If we hit a boot loop we
+         * can disable this by setting CONFIG_RS_CRASH_UPLOAD_DISABLE=y. */
+#ifndef CONFIG_RS_CRASH_UPLOAD_DISABLE
         rs_crash_upload_if_present();
+#endif
 
         rs_temp_start();
         rs_wifi_neighbor_start();
@@ -262,14 +265,13 @@ void app_main(void)
         rs_control_set_peers(ctl_peers, 3);
         rs_control_start(s_hms);
 
-        /* rs_presence has a structurally identical peer table — share. */
-        static rs_presence_peer_t pres_peers[3];
-        for (int i = 0; i < 3; i++) {
-            pres_peers[i].name = ctl_peers[i].name;
-            memcpy(pres_peers[i].mac, ctl_peers[i].mac, 6);
-        }
-        rs_presence_set_peers(pres_peers, 3);
-        rs_presence_start(s_hms);
+        /* rs_presence is DISABLED in v0.4.1 — initial deployment in v0.4.0
+         * caused a boot loop on Bedroom 2 (probably accessing FSM channel
+         * diagnostics from a separate task races with the FSM's own
+         * processing). We keep the component compiled in for future use
+         * but stop calling it on boot. The PRESENCE / WANDER telemetry
+         * streams are unavailable until this is fixed and a v0.4.2 ships. */
+        (void) ctl_peers;  /* peers shared with rs_control; no rs_presence wire-up */
     } else {
         ESP_LOGE(TAG, "rs_telemetry_init failed — auxiliary tasks not started");
     }
